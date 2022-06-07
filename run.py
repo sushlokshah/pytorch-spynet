@@ -7,6 +7,7 @@ import PIL
 import PIL.Image
 import sys
 import torch
+import matplotlib.pyplot as plt
 
 ##########################################################
 
@@ -141,8 +142,8 @@ def estimate(tenOne, tenTwo):
     intWidth = tenOne.shape[2]
     intHeight = tenOne.shape[1]
 
-    assert(intWidth == 1024) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
-    assert(intHeight == 416) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
+    # assert(intWidth == 1024) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
+    # assert(intHeight == 416) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
 
     tenPreprocessedOne = tenOne.cuda().view(1, 3, intHeight, intWidth)
     tenPreprocessedTwo = tenTwo.cuda().view(1, 3, intHeight, intWidth)
@@ -166,14 +167,21 @@ def estimate(tenOne, tenTwo):
 if __name__ == '__main__':
     tenOne = torch.FloatTensor(numpy.ascontiguousarray(numpy.array(PIL.Image.open(arguments_strOne))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (1.0 / 255.0)))
     tenTwo = torch.FloatTensor(numpy.ascontiguousarray(numpy.array(PIL.Image.open(arguments_strTwo))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (1.0 / 255.0)))
-
+    print(tenOne.shape)
     tenOutput = estimate(tenOne, tenTwo)
+    output_flow = tenOutput.numpy().transpose(1, 2, 0)
+    print(output_flow.min(),output_flow.max())
+    output_ = numpy.zeros([output_flow.shape[0],output_flow.shape[1],3])
+    output_[:,:,:2] = output_flow
+    output_[:,:,2] = 1
+    
+    plt.imshow(output_)
+    plt.show()
+    # objOutput = open(arguments_strOut, 'wb')
 
-    objOutput = open(arguments_strOut, 'wb')
+    # numpy.array([ 80, 73, 69, 72 ], numpy.uint8).tofile(objOutput)
+    # numpy.array([ tenOutput.shape[2], tenOutput.shape[1] ], numpy.int32).tofile(objOutput)
+    # numpy.array(tenOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(objOutput)
 
-    numpy.array([ 80, 73, 69, 72 ], numpy.uint8).tofile(objOutput)
-    numpy.array([ tenOutput.shape[2], tenOutput.shape[1] ], numpy.int32).tofile(objOutput)
-    numpy.array(tenOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(objOutput)
-
-    objOutput.close()
+    # objOutput.close()
 # end
